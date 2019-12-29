@@ -1,0 +1,41 @@
+version: "3"
+
+# https://github.com/pi-hole/docker-pi-hole/blob/master/README.md
+
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "127.0.0.1:67:67/udp"
+      - "127.0.0.1:80:80/tcp"
+      - "127.0.0.1:443:443/tcp"
+    environment:
+      TZ: 'America/New_York'
+      # WEBPASSWORD: 'randomly generated unless you set a value here'
+    # Volumes store your data between container upgrades
+    volumes:
+       - './etc-pihole/:/etc/pihole/'
+       - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
+    # run `touch ./var-log/pihole.log` first unless you like errors
+    # - './var-log/pihole.log:/var/log/pihole.log'
+    dns:
+      - 127.0.0.1
+      # - 1.1.1.1
+    # Recommended but not required (DHCP needs NET_ADMIN)
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+  unbound:
+    container_name: unbound
+    image: mvance/unbound:latest
+    #hostname: syn-unbound
+    #mac_address: d0:ca:ab:cd:ef:02
+    ports:
+      - 192.0.0.1:5253:53/tcp
+      - 192.0.0.1:5253:53/udp
+    restart: unless-stopped
